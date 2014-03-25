@@ -1,0 +1,17 @@
+<resources>
+
+    <string name="lock">User %1$s has just locked your computer</string>
+    <string name="logon">User %1$s has logged on to your computer</string>
+    <string name="active">User %1$s is currently active on your computer</string>
+    <string name="extension_name">Computer</string>
+    <string name="subject">Access Key for Dashclock Computer Extension</string>
+    <string name="preferences_title">Computer Extension Settings</string>
+    <string name="application_name">Dashclock Computer Extension</string>
+    <string name="extension_info">Displays information about your computer\'s status.</string>
+    <string name="hostname">Hostname</string>
+    <string name="summary">Enter the hostname of your computer</string>
+    <string name="logoff">User %1$s has logged off your computer</string>
+    <string name="unlock">User %1$s has just unlocked your computer</string>
+    <string name="toast">An error occurred while registering your extension.</string>
+
+</resources>
