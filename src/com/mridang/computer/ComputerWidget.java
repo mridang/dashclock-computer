@@ -1,7 +1,11 @@
 package com.mridang.computer;
 
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.Random;
+
+import org.apache.http.Header;
+import org.apache.http.entity.StringEntity;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -17,11 +21,14 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.bugsense.trace.BugSenseHandler;
 import com.google.android.apps.dashclock.api.DashClockExtension;
 import com.google.android.apps.dashclock.api.ExtensionData;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 
 /*
  * This class is the main class that provides the widget
@@ -430,42 +437,77 @@ public class ComputerWidget extends DashClockExtension {
 	/*
 	 * @see com.google.android.apps.dashclock.api.DashClockExtension#onUpdateData(int)
 	 */
+	@SuppressLint("DefaultLocale")
 	@Override
-	protected void onUpdateData(int arg0) {
+	protected void onUpdateData(int intReason) {
 
 		setUpdateWhenScreenOn(true);
 
-		try {
+		SharedPreferences spePreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		Log.d("ComputerWidget", "Checking if the widget is configured");
+		if (spePreferences.getString("hostname", "").isEmpty()) {
 
-			SharedPreferences spePreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-			String strToken = GoogleCloudMessaging.getInstance(getApplicationContext()).register("84581482730");
+			Log.d("ComputerWidget", "Hostname hasn't been configured");
+			Toast.makeText(getApplicationContext(), getString(R.string.unconfigured), Toast.LENGTH_LONG).show();
 
-			Log.d("WidgetSettings", "Checking the status of the new token: " + strToken);
-			if (spePreferences.getString("token", "").isEmpty()) {
+		} else {
 
-				Log.d("WidgetSettings", "Not registered, saving the token");
-				spePreferences.edit().putString("token", strToken).commit();
+			try {
 
-			} else {
+				String strToken = GoogleCloudMessaging.getInstance(getApplicationContext()).register("84581482730");
+				Log.d("ComputerWidget", "Checking the status of the new token: " + strToken);
+				if (spePreferences.getString("token", "").isEmpty()) {
 
-				Log.d("WidgetSettings", "Old token :" + spePreferences.getString("token", ""));
-				if (!spePreferences.getString("token", "").equalsIgnoreCase(strToken)) {
-
-					Log.d("WidgetSettings", "Token changed, saving the new token");
+					Log.d("ComputerWidget", "Not registered, saving the token");
 					spePreferences.edit().putString("token", strToken).commit();
-					//TODO: Post the new token
+
+				} else {
+
+					Log.d("ComputerWidget", "Token changed, saving the new token");
+					spePreferences.edit().putString("token", strToken).commit();
 
 				}
 
-			}
+				String strName = spePreferences.getString("hostname", "").toUpperCase();
+				Log.d("ComputerWidget", "Hostname is " + strName);
 
-		} catch (IOException e) {
-			Log.e("WidgetSettings", "Error getting token", e);
-			
-		} catch (Exception e) {
-			Log.e("WidgetSettings", "Unknown error occurred", e);
-			BugSenseHandler.sendException(e);
-		} 
+				MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+				byte[] bytHash = md5Digest.digest(strName.getBytes());
+				StringBuffer sbfHash = new StringBuffer();
+
+				for (int i = 0; i < bytHash.length; ++i) {
+					sbfHash.append(Integer.toHexString(bytHash[i] & 0xFF | 0x100).substring(1,3));
+				}
+
+				String strPath = "http://androprter.appspot.com/set/token" + sbfHash.toString() +"/";
+				Log.d("ComputerWidget", "Posting token to " + strPath);
+				AsyncHttpClient ascClient = new AsyncHttpClient();
+				ascClient.setTimeout(5000);
+				ascClient.post(getApplicationContext(), 
+						strPath, 
+						new StringEntity(strToken, "UTF-8"), "text/plain", new AsyncHttpResponseHandler() {
+
+					@Override
+					public void onSuccess(String strResponse) {
+						Log.d("ComputerWidget", "Posted the token successfully");
+					}
+
+					@Override
+					public void onFailure(int intCode, Header[] arrHeaders, byte[] arrBytes, Throwable errError) {
+						Log.w("ComputerWidget", "Error posting token due to code " + intCode);
+					}
+
+				});
+
+			} catch (IOException e) {
+				Log.e("ComputerWidget", "Error getting token", e);
+
+			} catch (Exception e) {
+				Log.e("ComputerWidget", "Unknown error occurred", e);
+				BugSenseHandler.sendException(e);
+			} 
+
+		}
 
 	}
 

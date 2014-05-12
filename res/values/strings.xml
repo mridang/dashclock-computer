@@ -13,5 +13,6 @@
     <string name="logoff">User %1$s has logged off your computer</string>
     <string name="unlock">User %1$s has just unlocked your computer</string>
     <string name="toast">An error occurred while registering your extension.</string>
+    <string name="unconfigured">Computer extension isn\'t configured.</string>
 
 </resources>

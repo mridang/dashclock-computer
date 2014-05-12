@@ -1,28 +1,10 @@
 package com.mridang.computer;
 
-import java.security.MessageDigest;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-
 import android.app.ProgressDialog;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.util.Log;
-import android.widget.Toast;
-
-import com.bugsense.trace.BugSenseHandler;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 /*
  * This class is the activity which contains the preferences
@@ -86,87 +68,6 @@ public class WidgetSettings extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.preferences);
 		bindPreferenceSummaryToValue(findPreference("hostname"));
 
-
-	}
-
-	/*
-	 * @see android.app.Activity#onBackPressed()
-	 */
-	@Override
-	public void onBackPressed() {
-
-		try {
-
-			if (new AsyncTask<Void, Void, String>() {
-
-				/*
-				 * @see android.os.AsyncTask#doInBackground(Params[])
-				 */
-				@Override
-				protected String doInBackground(Void... params) {
-
-					try {
-
-						SharedPreferences spePreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-						Log.d("WidgetSettings", "Checking if we've already registred with GCM");
-						if (spePreferences.getString("token", "").isEmpty()) {
-
-							Log.d("WidgetSettings", "Token not found. Getting a new GCM token and saving it.");
-							String strToken = GoogleCloudMessaging.getInstance(getApplicationContext()).register("84581482730");
-
-							Log.d("WidgetSettings", "Got token. " + strToken);
-							spePreferences.edit().putString("token", strToken).commit();
-
-						} 
-
-						Log.d("WidgetSettings", "Registering token with backend");
-						String strToken = spePreferences.getString("token", "");
-
-						EditTextPreference edtName = (EditTextPreference) findPreference("hostname");
-						String strName = edtName.getText();
-						MessageDigest md5Digest = MessageDigest.getInstance("MD5");
-						byte[] bytHash = md5Digest.digest(strName.getBytes());
-						StringBuffer sbfHash = new StringBuffer();
-
-						for (int i = 0; i < bytHash.length; ++i) {
-							sbfHash.append(Integer.toHexString(bytHash[i] & 0xFF | 0x100).substring(1,3));
-						}
-
-						String strPath = "http://androprter.appspot.com/set/" + sbfHash.toString() +"/";
-						Log.d("WidgetSettings", "Posting token to " + strPath);
-
-						HttpClient dhcClient = new DefaultHttpClient();
-						HttpPost posToken = new HttpPost(strPath);
-						posToken.setEntity(new StringEntity(strToken));
-						HttpResponse resToken = dhcClient.execute(posToken);
-
-						Integer intToken = resToken.getStatusLine().getStatusCode();
-						if (intToken != HttpStatus.SC_OK) {
-							throw new HttpResponseException(intToken, "Server responded with code " + intToken);
-						}
-
-						Log.d("WidgetSettings", "Successfully registered token");
-						return strToken;
-
-					} catch (Exception e) {
-						Log.e("WidgetSettings", "Error getting token", e);
-						BugSenseHandler.sendException(e);
-					}
-
-					Toast.makeText(getApplicationContext(), R.string.toast, Toast.LENGTH_LONG).show();
-					return null;
-
-				}
-
-			}.execute().get() != null) {
-				super.onBackPressed();
-			}
-
-		} catch (Exception e) {
-			Log.e("WidgetSettings", "Error getting token", e);
-			BugSenseHandler.sendException(e);
-		}
 
 	}
 
