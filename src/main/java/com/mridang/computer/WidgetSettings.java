@@ -1,6 +1,5 @@
 package com.mridang.computer;
 
-import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -9,16 +8,13 @@ import android.preference.PreferenceManager;
 /*
  * This class is the activity which contains the preferences
  */
-@SuppressWarnings("deprecation")
 public class WidgetSettings extends PreferenceActivity {
 
-	/* The instance of the pdgProgress dialog */
-	ProgressDialog pdgProgress;
-
-	/*
-	 * @see android.preference.PreferenceActivity#onCreate(android.os.Bundle)
-	 */
-	@Override
+    /*
+     * @see android.preference.PreferenceActivity#onCreate(android.os.Bundle)
+     */
+	@SuppressWarnings("ConstantConditions")
+    @Override
 	public void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
@@ -28,10 +24,10 @@ public class WidgetSettings extends PreferenceActivity {
 	}
 
 	/*
-	 * A preference value change listener that updates the preference's summary 
+	 * A preference value change listener that updates the preference's summary
 	 * to reflect its new value.
 	 */
-	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+	private static final Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
 
 		@Override
 		public boolean onPreferenceChange(Preference prePreference, Object objValue) {
@@ -44,17 +40,16 @@ public class WidgetSettings extends PreferenceActivity {
 	};
 
 	/*
-	 * Binds a preference's summary to its value. More specifically, when the 
-	 * preference's value is changed, its summary is updated to reflect the value.
+	 * Binds a preference's summary to its value. More specifically, when the
+	 * preference's value is changed, its summary is updated to reflect the
+	 * value.
 	 */
 	private static void bindPreferenceSummaryToValue(Preference prePreference) {
 
 		prePreference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 
-		sBindPreferenceSummaryToValueListener.onPreferenceChange(prePreference,
-				PreferenceManager
-				.getDefaultSharedPreferences(prePreference.getContext())
-				.getString(prePreference.getKey(), ""));
+		sBindPreferenceSummaryToValueListener.onPreferenceChange(prePreference, PreferenceManager
+				.getDefaultSharedPreferences(prePreference.getContext()).getString(prePreference.getKey(), ""));
 
 	}
 
@@ -67,7 +62,6 @@ public class WidgetSettings extends PreferenceActivity {
 		super.onPostCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.preferences);
 		bindPreferenceSummaryToValue(findPreference("hostname"));
-
 
 	}
 
